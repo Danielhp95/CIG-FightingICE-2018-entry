@@ -1,0 +1,16 @@
+TODO
+docker/
+previous-entries/
+FTG4.20/log
+FTG4.20/sample-AIs/
+FTG4.20/Feature\ Extractor\ in\ Python/
+FTG4.20/python/tournament-benchmarker/
+
+# Python files
+__pycache__/
+*.py[cod]
+Pipfile.lock
+
+# VIM: Swap-files
+[._]*.s[a-w][a-z]
+[._]s[a-w][a-z]
