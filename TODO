@@ -1,0 +1,12 @@
+Use python (Popen from subprocess) to start the Java application. DONE
+    By using:
+       p = Popen(cmd, cwd='relative/path', shell=True)
+       p.kill()
+    find way of closing the opened processes!
+
+Run the java application in server using Python's mode (V4.3).
+    Find way of installing custom python dependencies (by running pip install --useR
+        - worse case scenario, I can download them by hand
+Make sure logs appear normal
+
+Create a proper git repo DONE
