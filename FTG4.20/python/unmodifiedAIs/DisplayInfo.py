@@ -2,7 +2,7 @@ from py4j.java_gateway import get_field
 
 
 class DisplayInfo(object):
-    def __init__(self, gateway, match):
+    def __init__(self, gateway):
         self.gateway = gateway
 
         self.width = 96 # The width of the display to obtain
@@ -53,6 +53,7 @@ class DisplayInfo(object):
 
         # get display pixel data
         displayBuffer = self.frameData.getDisplayByteBufferAsBytes(self.width, self.height, self.grayscale)
+        print(displayBuffer)
 
         # calcultate the distance
         distance = self.calculateDistance(displayBuffer)

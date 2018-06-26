@@ -26,6 +26,8 @@ elif [ "$MODE" = "DEBUG_PYTHON_MODE" ]; then
     FLAGS="--grey-bg --inverted-player 1 --json --err-log --mute --py4j --port $PORT" 
 elif [ "$MODE" = "V4.3" ]; then
     FLAGS="--grey-bg --inverted-player 1 --json --disable-window --fastmode --mute --py4j --port $PORT" 
+elif [ "$MODE" = "V4.3_WINDOWED" ]; then
+    FLAGS="--grey-bg --inverted-player 1 --json --mute --py4j --port $PORT" 
 else
     echo "MODE: \"$MODE\" is not a valid mode, enter a valid mode: {TRAIN_MODE, DEBUG_MODE}"
     echo "Usage: ./start.sh MODE PORT_NUMBER (default 4242)"
