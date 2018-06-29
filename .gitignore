@@ -1,9 +1,9 @@
 docker/
 previous-entries/
-FTG4.20/log
-FTG4.20/sample-AIs/
-FTG4.20/Feature\ Extractor\ in\ Python/
-FTG4.20/python/tournament-benchmarker/
+FTG4.30/log
+FTG4.30/sample-AIs/
+FTG4.30/Feature\ Extractor\ in\ Python/
+FTG4.30/python/tournament-benchmarker/
 
 # Python files
 __pycache__/
@@ -13,3 +13,6 @@ Pipfile.lock
 # VIM: Swap-files
 [._]*.s[a-w][a-z]
 [._]s[a-w][a-z]
+
+# Simon from DC labs files
+simon/

@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="DatasetCreator">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/data/aiData/DatasetCreator.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

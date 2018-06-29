@@ -10,3 +10,17 @@ Run the java application in server using Python's mode (V4.3).
 Make sure logs appear normal
 
 Create a proper git repo DONE
+
+LOW LEVEL:
+    1. Make one-hot encoding for ACTION and STATE frameData information
+        1.1 - Normalize everything?
+    2. Add Pixel input
+    3. Offset frameData info from pixel input
+        3.1 Use a buffer inside DataCreator?
+
+HIGH LEVEL:
+    4. Make DataCreator create per round file
+    5. Create metadata (.meta) file (programatically, pls) and add / update where appropiate (initialize and roundEnd)
+    6. Enforce {num}_{contestantAI}_{char1}_{char2}.csv dataset file format.
+        6.1 Find way of reading {num}...{char2} info. At best, use java, at worst, read from .tmp file (use better name than .tmp)
+    7. Create python script to play different combinations of: contestantAI -> {p1, p2} -> character {ZEN, GARNET}
