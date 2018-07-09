@@ -5,6 +5,9 @@ FTG4.30/sample-AIs/
 FTG4.30/Feature\ Extractor\ in\ Python/
 FTG4.30/python/tournament-benchmarker/
 
+# Java compiled files
+*.class
+
 # Python files
 __pycache__/
 *.py[cod]
@@ -13,6 +16,11 @@ Pipfile.lock
 # VIM: Swap-files
 [._]*.s[a-w][a-z]
 [._]s[a-w][a-z]
+Session.vim
+
+# IDE files
+.idea
+.idea/
 
 # Simon from DC labs files
 simon/
