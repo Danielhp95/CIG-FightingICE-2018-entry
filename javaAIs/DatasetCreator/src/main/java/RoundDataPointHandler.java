@@ -1,6 +1,5 @@
-import java.io.FileWriter;
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
+
 import enumerate.Action;
 import enumerate.State;
 import org.yaml.snakeyaml.Yaml;
@@ -8,16 +7,21 @@ import struct.CharacterData;
 import struct.FrameData;
 import struct.ScreenData;
 
+import java.util.HashMap;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class RoundDataPointHandler {
 
-   
+    final Logger logger = LoggerFactory.getLogger(RoundDataPointHandler.class);
+
     private Map metadataFile;
     private FileWriter outputLogFile;
 
     private String datasetPath = "dataset/";
+    private final String METADATAFILEPATH = datasetPath + ".meta.yaml";
 
     // Information to create roundDataset.
     private int roundNumber;
@@ -28,14 +32,11 @@ public class RoundDataPointHandler {
     private int roundProcessedFrames;
 
     public RoundDataPointHandler() {
-
         resetRoundStatistics();
-        try {
-            this.metadataFile = findDatasetMetadata(datasetPath);
-            this.outputLogFile = startNewRoundDataset(metadataFile);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        this.metadataFile = findDatasetMetadata(METADATAFILEPATH);
+        this.outputLogFile = startNewRoundDataset(metadataFile);
+        logger.info("Started new RoundDataPointHandler with RoundNumber" + roundNumber +
+                " ContestantAI: " + contestantAI + " Char 1: " + character1 + " Char 2: " + character2);
     }
 
     private void resetRoundStatistics() {
@@ -43,11 +44,11 @@ public class RoundDataPointHandler {
     }
 
     private Map findDatasetMetadata(String filePath) {
-        String metadataFilePath = filePath + ".meta";
-        if (!exists(metadataFilePath)) {
-            createMetaDataFile(metadataFilePath);
+        if (!exists(filePath)) {
+            logger.info("Metadata file NOT FOUND. Creating new metadatafile at directory: " + filePath);
+            createMetaDataFile(filePath);
         }
-        return loadMetadataFile(metadataFilePath);
+        return openYamlFile(filePath);
     }
 
     private boolean exists(String filePath) {
@@ -55,35 +56,49 @@ public class RoundDataPointHandler {
     }
 
     private void createMetaDataFile(String filePath) {
-        String skeleton = "\n- NumberOfAIs: 0\nTotalFrames: 0\nContestants:\n";
+        Map<String, Object> skeleton = new HashMap();
+        skeleton.put("TotalFrames", 0);
+        writeMapToYamlFile(filePath, skeleton);
+    }
+
+    private Map openYamlFile(String filePath) {
+        Yaml yaml = new Yaml();
+        Map yamlFile = null;
         try {
-           FileWriter newMetadataFile = new FileWriter(filePath);
-           newMetadataFile.append(skeleton);
-           newMetadataFile.close();
+            yamlFile = (Map) yaml.load(new FileReader(filePath));
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        return yamlFile;
+    }
+
+    private void writeMapToYamlFile(String filePath, Map content) {
+        logger.info("Writting to file {} with content {}", filePath, content.toString());
+        try {
+            Yaml yaml = new Yaml();
+            FileWriter newFile = new FileWriter(filePath);
+            newFile.append(yaml.dump(content));
+            newFile.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    private Map loadMetadataFile(String filePath) {
-        Yaml yaml = new Yaml();
-        Map metadata = (Map) yaml.load(filePath);
-        return metadata;
-    }
-
-    private FileWriter startNewRoundDataset(Map metadataFile) throws IOException {
+    private FileWriter startNewRoundDataset(Map metadataFile) {
         resetRoundStatistics();
         try {
             return createEmptyRoundDataset(metadataFile);
         } catch (IOException e) {
+            logger.error("Could not create new dataset file");
             e.printStackTrace();
-            throw new IOException();
         }
+        return null;
     }
 
     private FileWriter createEmptyRoundDataset(Map metaDataFile) throws IOException {
         this.roundProcessedFrames = 0;
         String newRoundDatasetName = getNextRoundDatasetFileName(metaDataFile);
+        logger.info("Creating new RoundDataset with name {}", newRoundDatasetName);
         FileWriter f = new FileWriter(newRoundDatasetName);
         createDatasetHeaders(f);
         return f;
@@ -91,11 +106,17 @@ public class RoundDataPointHandler {
 
     private String getNextRoundDatasetFileName(Map metaDataFile) {
         // TODO add propername
-        String roundNumber = "";
-        String contestantAI = "";
-        String character1 = "";
-        String character2 = "newFileName";
+        // Read from temporary file
+        Map tempInfoFile = openYamlFile(datasetPath + ".temp_match_info.yaml");
+
+        this.contestantAI = (String) tempInfoFile.get("contestantAI");
+        this.character1 = (String) tempInfoFile.get("character1");
+        this.character2 = (String) tempInfoFile.get("character2");
+
+        // From other metadatafile
+        String roundNumber = "WhatRoundIsIt";
         String fileName = String.join("_", roundNumber, contestantAI, character1, character2) + ".csv";
+        // Update temporary file
         return datasetPath + fileName;
     }
 
@@ -108,7 +129,6 @@ public class RoundDataPointHandler {
             playerColumns += String.join(", ", player + "xCenter", player +"yCenter", player +"action",
                                                                   player +"energy", player +"hp", player +"xSpeed", player +"ySpeed",
                                                                    player +"state", player +"isFront");
-            playerColumns += ", ";
         }
         try {
             file.append(String.join(", ", playerIndependentColumns, playerColumns));
@@ -134,7 +154,7 @@ public class RoundDataPointHandler {
 
     private void checkFrameDataAndScreenDataAreSafe(FrameData frameData, ScreenData screenData) {
         if (screenData == null || (frameData.getEmptyFlag() || frameData.getRemainingTimeMilliseconds() <= 0)) {
-            System.out.println("TODO add proper error message");
+            logger.error("Tried to process bad dataframe, dataset will be corrupted");
         }
 
     }
@@ -179,16 +199,17 @@ public class RoundDataPointHandler {
     }
 
     public void roundEnd() {
+        logger.info("Round finished");
         close();
-        try {
-            this.outputLogFile = startNewRoundDataset(this.metadataFile);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        this.outputLogFile = startNewRoundDataset(this.metadataFile);
     }
 
     private void updateDatasetMetadata(Map metadataFile) {
-        // TODO add information to metadata file
+        int previousFrames = (int) metadataFile.get("TotalFrames");
+        metadataFile.put("TotalFrames", previousFrames + this.roundProcessedFrames);
+        // TODO add MORE information to metadata file
+
+        writeMapToYamlFile(METADATAFILEPATH, metadataFile);
     }
 
     public void close() {

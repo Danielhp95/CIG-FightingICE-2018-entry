@@ -1,8 +1,4 @@
-import java.io.*;
 import aiinterface.AIInterface;
-import enumerate.Action;
-import enumerate.State;
-import struct.CharacterData;
 import struct.FrameData;
 import struct.GameData;
 import struct.Key;
@@ -16,7 +12,8 @@ public class DatasetCreator implements AIInterface {
     private RoundDataPointHandler datapointHandler; 
 
     private ScreenData latestScreenData;
-public int initialize(GameData gameData, boolean b) {
+
+    public int initialize(GameData gameData, boolean b) {
         this.datapointHandler = new RoundDataPointHandler();
         this.playingAI = new MctsAi();
         return this.playingAI.initialize(gameData, b);
@@ -51,7 +48,6 @@ public int initialize(GameData gameData, boolean b) {
     public void roundEnd(int i, int i1, int i2) {
         this.playingAI.roundEnd(i, i1, i2);
         datapointHandler.roundEnd();
-        // TODO make roundDatapointHandler open new file
     }
 
     public void getScreenData(ScreenData sd) {
