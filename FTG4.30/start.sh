@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Identify where java executables live, which classes need to be imported and which Main class to run
-CLASSPATH="-classpath bin:lib/snakeyaml-1.17.jar:lib/natives/linux/lwjgl-glfw-natives-linux.jar:data/aiData/:lib/natives/linux/lwjgl-natives-linux.jar:lib/natives/linux/lwjgl-openal-natives-linux.jar:lib/natives/linux/lwjgl-opengl-natives-linux.jar:FightingICE.jar:lib/lwjgl/lwjgl_util.jar:lib/lwjgl/lwjgl-glfw.jar:lib/lwjgl/lwjgl-openal.jar:lib/lwjgl/lwjgl-opengl.jar:lib/lwjgl/lwjgl.jar:lib/javax.json-1.0.4.jar:lib/py4j0.10.4.jar"
+CLASSPATH="-classpath bin:lib/logback/:lib/slf4j-1.7.25/slf4j-api-1.7.25.jar:lib/slf4j-1.7.25/slf4j-simple-1.7.25.jar:lib/snakeyaml-1.17.jar:lib/natives/linux/lwjgl-glfw-natives-linux.jar:data/aiData/:lib/natives/linux/lwjgl-natives-linux.jar:lib/natives/linux/lwjgl-openal-natives-linux.jar:lib/natives/linux/lwjgl-opengl-natives-linux.jar:FightingICE.jar:lib/lwjgl/lwjgl_util.jar:lib/lwjgl/lwjgl-glfw.jar:lib/lwjgl/lwjgl-openal.jar:lib/lwjgl/lwjgl-opengl.jar:lib/lwjgl/lwjgl.jar:lib/javax.json-1.0.4.jar:lib/py4j0.10.4.jar"
 MAINCLASS="Main"
 
 # NOTE on flags: 
