@@ -2,13 +2,14 @@ import java.io.*;
 
 import enumerate.Action;
 import enumerate.State;
-import org.yaml.snakeyaml.Yaml;
 import struct.CharacterData;
 import struct.FrameData;
 import struct.ScreenData;
 
-import java.util.HashMap;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,11 +18,11 @@ public class RoundDataPointHandler {
 
     final Logger logger = LoggerFactory.getLogger(RoundDataPointHandler.class);
 
+    private YamlHandler yamlHandler;
     private Map metadataFile;
     private FileWriter outputLogFile;
 
     private String datasetPath = "dataset/";
-    private final String METADATAFILEPATH = datasetPath + ".meta.yaml";
 
     // Information to create roundDataset.
     private int roundNumber;
@@ -32,62 +33,39 @@ public class RoundDataPointHandler {
     private int roundProcessedFrames;
 
     public RoundDataPointHandler() {
+        this.yamlHandler = new YamlHandler(datasetPath);
+
         resetRoundStatistics();
-        this.metadataFile = findDatasetMetadata(METADATAFILEPATH);
+
+        this.metadataFile = yamlHandler.findDatasetMetadata();
+        parseTempFile(datasetPath + ".temp_match_info.yaml");
+
+        if (!yamlHandler.doesContestantExist(this.metadataFile, this.contestantAI)) {
+            logger.info("Instantiating metadata for AI {}", this.contestantAI);
+            metadataFile = yamlHandler.addContestantToMetadata(metadataFile, this.contestantAI);
+        }
+
         this.outputLogFile = startNewRoundDataset(metadataFile);
-        logger.info("Started new RoundDataPointHandler with RoundNumber" + roundNumber +
-                " ContestantAI: " + contestantAI + " Char 1: " + character1 + " Char 2: " + character2);
+
+        logger.info("Started new RoundDataPointHandler with RoundNumber {}: ContestantAI: {} Char 1: {} Char 2: {}",
+                    roundNumber, contestantAI, character1, character2);
     }
 
     private void resetRoundStatistics() {
         this.roundProcessedFrames = 0;
     }
 
-    private Map findDatasetMetadata(String filePath) {
-        if (!exists(filePath)) {
-            logger.info("Metadata file NOT FOUND. Creating new metadatafile at directory: " + filePath);
-            createMetaDataFile(filePath);
-        }
-        return openYamlFile(filePath);
+    private void parseTempFile(String filePath) {
+        Map tempInfoFile = yamlHandler.openYamlFile(datasetPath + ".temp_match_info.yaml");
+        this.contestantAI = (String) tempInfoFile.get("contestantAI");
+        this.character1 = (String) tempInfoFile.get("character1");
+        this.character2 = (String) tempInfoFile.get("character2");
     }
 
-    private boolean exists(String filePath) {
-        return new File(filePath).isFile();
-    }
-
-    private void createMetaDataFile(String filePath) {
-        Map<String, Object> skeleton = new HashMap();
-        skeleton.put("TotalFrames", 0);
-        writeMapToYamlFile(filePath, skeleton);
-    }
-
-    private Map openYamlFile(String filePath) {
-        Yaml yaml = new Yaml();
-        Map yamlFile = null;
-        try {
-            yamlFile = (Map) yaml.load(new FileReader(filePath));
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
-        return yamlFile;
-    }
-
-    private void writeMapToYamlFile(String filePath, Map content) {
-        logger.info("Writting to file {} with content {}", filePath, content.toString());
-        try {
-            Yaml yaml = new Yaml();
-            FileWriter newFile = new FileWriter(filePath);
-            newFile.append(yaml.dump(content));
-            newFile.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private FileWriter startNewRoundDataset(Map metadataFile) {
+    private FileWriter startNewRoundDataset(Map metaDataFile) {
         resetRoundStatistics();
         try {
-            return createEmptyRoundDataset(metadataFile);
+            return createEmptyRoundDataset(metaDataFile);
         } catch (IOException e) {
             logger.error("Could not create new dataset file");
             e.printStackTrace();
@@ -96,27 +74,17 @@ public class RoundDataPointHandler {
     }
 
     private FileWriter createEmptyRoundDataset(Map metaDataFile) throws IOException {
-        this.roundProcessedFrames = 0;
-        String newRoundDatasetName = getNextRoundDatasetFileName(metaDataFile);
+        String newRoundDatasetName = getNextRoundDatasetFileName(metaDataFile, contestantAI, character1, character2);
         logger.info("Creating new RoundDataset with name {}", newRoundDatasetName);
         FileWriter f = new FileWriter(newRoundDatasetName);
         createDatasetHeaders(f);
         return f;
     }
 
-    private String getNextRoundDatasetFileName(Map metaDataFile) {
-        // TODO add propername
-        // Read from temporary file
-        Map tempInfoFile = openYamlFile(datasetPath + ".temp_match_info.yaml");
+    private String getNextRoundDatasetFileName(Map metaDataFile, String contestantAI, String character1, String character2) {
+        int roundNumber = 1 + yamlHandler.findRoundNumberForContestant(metaDataFile, contestantAI);
 
-        this.contestantAI = (String) tempInfoFile.get("contestantAI");
-        this.character1 = (String) tempInfoFile.get("character1");
-        this.character2 = (String) tempInfoFile.get("character2");
-
-        // From other metadatafile
-        String roundNumber = "WhatRoundIsIt";
-        String fileName = String.join("_", roundNumber, contestantAI, character1, character2) + ".csv";
-        // Update temporary file
+        String fileName = String.join("_", Integer.toString(roundNumber), contestantAI, character1, character2) + ".csv";
         return datasetPath + fileName;
     }
 
@@ -125,10 +93,12 @@ public class RoundDataPointHandler {
         String playerColumns = ""; int numberOfPlayers = 2;
         for (int i = 0; i < numberOfPlayers; i++) {
             String player = (i+1) + "_";
-            // TODO map fun, map the string variable (player) to the list of variables to record
-            playerColumns += String.join(", ", player + "xCenter", player +"yCenter", player +"action",
-                                                                  player +"energy", player +"hp", player +"xSpeed", player +"ySpeed",
-                                                                   player +"state", player +"isFront");
+            List<String> fields = Arrays.asList("xCenter", "yCenter", "action", "energy",
+                                                 "hp", "xSpeed", "ySpeed", "state", "isFront")
+                                                .stream()
+                                                .map(s -> player + s)
+                                                .collect(Collectors.toList());
+            playerColumns += String.join(", ", fields);
         }
         try {
             file.append(String.join(", ", playerIndependentColumns, playerColumns));
@@ -163,7 +133,7 @@ public class RoundDataPointHandler {
     private String getPixelInformationFromScreenData(ScreenData screenData){
         byte[] grayscaleDownSampledPixels =
                 screenData.getDisplayByteBufferAsBytes(96, 64, true);
-        return null;
+        return "NOT IMPLEMENTED";
     }
 
     /*
@@ -204,16 +174,9 @@ public class RoundDataPointHandler {
         this.outputLogFile = startNewRoundDataset(this.metadataFile);
     }
 
-    private void updateDatasetMetadata(Map metadataFile) {
-        int previousFrames = (int) metadataFile.get("TotalFrames");
-        metadataFile.put("TotalFrames", previousFrames + this.roundProcessedFrames);
-        // TODO add MORE information to metadata file
-
-        writeMapToYamlFile(METADATAFILEPATH, metadataFile);
-    }
 
     public void close() {
-        updateDatasetMetadata(metadataFile);
+        yamlHandler.updateDatasetMetadata(metadataFile, this.contestantAI, this.roundProcessedFrames);
         try {
             this.outputLogFile.close(); // May break
         } catch (IOException e) {
