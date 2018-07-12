@@ -61,12 +61,11 @@ public class YamlHandler {
             yamlFile = (Map) yaml.load(new FileReader(filePath));
         } catch (FileNotFoundException e) {
             e.printStackTrace();
-        }
-        return yamlFile;
+        } return yamlFile;
     }
 
     private void writeMapToYamlFile(String filePath, Map content) {
-        logger.info("Writting to file {} with content {}", filePath, content.toString());
+        logger.debug("Writting to file {} with content {}", filePath, content.toString());
         try {
             Yaml yaml = new Yaml();
             FileWriter newFile = new FileWriter(filePath);

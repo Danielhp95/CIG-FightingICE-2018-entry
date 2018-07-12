@@ -42,7 +42,6 @@ public class DatasetCreator implements AIInterface {
 
     public void close() {
         this.playingAI.close();
-        datapointHandler.close();
     }
 
     public void roundEnd(int i, int i1, int i2) {

@@ -31,6 +31,7 @@ public class RoundDataPointHandler {
     private String character2;
 
     private int roundProcessedFrames;
+    private boolean isFirstRoundDatapoint;
 
     public RoundDataPointHandler() {
         this.yamlHandler = new YamlHandler(datasetPath);
@@ -45,14 +46,12 @@ public class RoundDataPointHandler {
             metadataFile = yamlHandler.addContestantToMetadata(metadataFile, this.contestantAI);
         }
 
-        this.outputLogFile = startNewRoundDataset(metadataFile);
-
         logger.info("Started new RoundDataPointHandler with RoundNumber {}: ContestantAI: {} Char 1: {} Char 2: {}",
                     roundNumber, contestantAI, character1, character2);
     }
 
     private void resetRoundStatistics() {
-        this.roundProcessedFrames = 0;
+        this.roundProcessedFrames = 0; this.isFirstRoundDatapoint = true;
     }
 
     private void parseTempFile(String filePath) {
@@ -63,7 +62,6 @@ public class RoundDataPointHandler {
     }
 
     private FileWriter startNewRoundDataset(Map metaDataFile) {
-        resetRoundStatistics();
         try {
             return createEmptyRoundDataset(metaDataFile);
         } catch (IOException e) {
@@ -82,13 +80,14 @@ public class RoundDataPointHandler {
     }
 
     private String getNextRoundDatasetFileName(Map metaDataFile, String contestantAI, String character1, String character2) {
-        int roundNumber = 1 + yamlHandler.findRoundNumberForContestant(metaDataFile, contestantAI);
+        this.roundNumber = 1 + yamlHandler.findRoundNumberForContestant(metaDataFile, contestantAI);
 
         String fileName = String.join("_", Integer.toString(roundNumber), contestantAI, character1, character2) + ".csv";
         return datasetPath + fileName;
     }
 
     private void createDatasetHeaders(FileWriter file) {
+        String pixelInfo = "Pixels";
         String playerIndependentColumns = String.join(", ", "frameNumber", "xDistance", "yDistance");
         String playerColumns = ""; int numberOfPlayers = 2;
         for (int i = 0; i < numberOfPlayers; i++) {
@@ -101,7 +100,7 @@ public class RoundDataPointHandler {
             playerColumns += String.join(", ", fields);
         }
         try {
-            file.append(String.join(", ", playerIndependentColumns, playerColumns));
+            file.append(String.join(", ", pixelInfo, playerIndependentColumns, playerColumns));
             file.append("\n");
         } catch (IOException e) {
             e.printStackTrace();
@@ -110,6 +109,13 @@ public class RoundDataPointHandler {
 
     public void addDataPoint(FrameData frameData, ScreenData screenData) {
         checkFrameDataAndScreenDataAreSafe(frameData, screenData);
+
+        if (isFirstRoundDatapoint) {
+            isFirstRoundDatapoint = false;
+            logger.info("First frame where info can be added in Round {}", this.roundNumber);
+            this.outputLogFile = startNewRoundDataset(this.metadataFile);
+        }
+
         String pixelInfo     = getPixelInformationFromScreenData(screenData);
         String frameDataInfo = getFrameDataInformation(frameData);
         String dataPoint = String.join(", ", pixelInfo, frameDataInfo);
@@ -169,17 +175,17 @@ public class RoundDataPointHandler {
     }
 
     public void roundEnd() {
-        logger.info("Round finished");
+        logger.info("Round {} finished", this.roundNumber);
         close();
-        this.outputLogFile = startNewRoundDataset(this.metadataFile);
+        resetRoundStatistics();
     }
-
 
     public void close() {
         yamlHandler.updateDatasetMetadata(metadataFile, this.contestantAI, this.roundProcessedFrames);
         try {
             this.outputLogFile.close(); // May break
         } catch (IOException e) {
+            logger.error("OutputLogFile breaks Somehow");
             e.printStackTrace();
         }
     }
