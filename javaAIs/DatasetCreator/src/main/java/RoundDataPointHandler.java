@@ -6,10 +6,13 @@ import struct.CharacterData;
 import struct.FrameData;
 import struct.ScreenData;
 
+import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.DoubleStream;
+import java.util.stream.IntStream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -139,7 +142,25 @@ public class RoundDataPointHandler {
     private String getPixelInformationFromScreenData(ScreenData screenData){
         byte[] grayscaleDownSampledPixels =
                 screenData.getDisplayByteBufferAsBytes(96, 64, true);
+        double[] normalizedPixelValues = normalizePixelValuesWithinRange(grayscaleDownSampledPixels,
+                -127, 127, 0, 1);
+        try {
+            FileWriter f = new FileWriter(datasetPath + "pixels");
+            f.append(Arrays.toString(normalizedPixelValues));
+            f.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         return "NOT IMPLEMENTED";
+    }
+
+    private double[] normalizePixelValuesWithinRange(byte[] values, float currentMin, float currentMax,
+                                                                       float minValue, float maxValue) {
+        ByteBuffer buffer = ByteBuffer.wrap(values);
+        double[] normalizedValues = IntStream.generate(buffer::get).limit(buffer.remaining())
+                .mapToDouble(x -> (x - currentMin) / (currentMax - currentMin))
+                .toArray();
+        return normalizedValues;
     }
 
     /*
