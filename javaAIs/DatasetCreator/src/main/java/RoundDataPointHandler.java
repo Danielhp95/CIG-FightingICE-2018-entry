@@ -11,7 +11,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
 
 import org.slf4j.Logger;
@@ -90,7 +89,7 @@ public class RoundDataPointHandler {
     }
 
     private void createDatasetHeaders(FileWriter file) {
-        String pixelInfo = "Pixels";
+        String pixelInfo = "pixels";
         String playerIndependentColumns = String.join(", ", "frameNumber", "xDistance", "yDistance");
         String playerColumns = ""; int numberOfPlayers = 2;
         for (int i = 0; i < numberOfPlayers; i++) {
@@ -103,7 +102,7 @@ public class RoundDataPointHandler {
             playerColumns += String.join(", ", fields);
         }
         try {
-            file.append(String.join(", ", pixelInfo, playerIndependentColumns, playerColumns));
+            file.append(String.join(", ", playerIndependentColumns, playerColumns, pixelInfo));
             file.append("\n");
         } catch (IOException e) {
             e.printStackTrace();
@@ -121,7 +120,7 @@ public class RoundDataPointHandler {
 
         String pixelInfo     = getPixelInformationFromScreenData(screenData);
         String frameDataInfo = getFrameDataInformation(frameData);
-        String dataPoint = String.join(", ", pixelInfo, frameDataInfo);
+        String dataPoint = String.join(", ", frameDataInfo, pixelInfo);
         try {
             this.outputLogFile.append(dataPoint);
             this.outputLogFile.append("\n");
@@ -144,14 +143,7 @@ public class RoundDataPointHandler {
                 screenData.getDisplayByteBufferAsBytes(96, 64, true);
         double[] normalizedPixelValues = normalizePixelValuesWithinRange(grayscaleDownSampledPixels,
                 -127, 127, 0, 1);
-        try {
-            FileWriter f = new FileWriter(datasetPath + "pixels");
-            f.append(Arrays.toString(normalizedPixelValues));
-            f.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return "NOT IMPLEMENTED";
+        return normalizedPixelValues.toString();
     }
 
     private double[] normalizePixelValuesWithinRange(byte[] values, float currentMin, float currentMax,

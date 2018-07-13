@@ -17,17 +17,17 @@ LOW LEVEL:
     3. Offset frameData info from pixel input
         3.1 Use a buffer inside DataCreator?
     // NEW!
-    4. Learn to create nested yaml objects in SnakeYaml
-        To add contestantAI metadata
-    5. Make sure that new roundDataset does not get called more often than necessary (Use a flag to on get information)
+    4. Learn to create nested yaml objects in SnakeYaml DONE
+        To add contestantAI metadata DONE
+    5. Make sure that new roundDataset does not get called more often than necessary (Use a flag to on get information) (Almost DONE?)
    
 
 HIGH LEVEL:
-    4. Make DataCreator create per round file
-    5. Create metadata (.meta) file (programatically, pls) and add / update where appropiate (initialize and roundEnd)
-    6. Enforce {num}_{contestantAI}_{char1}_{char2}.csv dataset file format.
-        6.1 Find way of reading {num}...{char2} info. At best, use java, at worst, read from .tmp file (use better name than .tmp) (worse came to worst!)
-    // NEW!
+    4. Make DataCreator create per round file DONE
+    5. Create metadata (.meta) file (programatically, pls) and add / update where appropiate (initialize and roundEnd) DONE
+    6. Enforce {num}_{contestantAI}_{char1}_{char2}.csv dataset file format. DONE
+        6.1 Find way of reading {num}...{char2} info. At best, use java, at worst, read from .tmp file (use better name than .tmp) (worse came to worst!) DONE
+    // NEW! 
     7. Create python script to play different combinations of: contestantAI -> {p1, p2} -> character {ZEN, GARNET}
         1.2 Use this by creating a temp file, and by calling the java JVM with certain parameter values
 
