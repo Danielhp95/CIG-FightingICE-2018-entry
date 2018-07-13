@@ -47,7 +47,7 @@ public class DatasetCreator implements AIInterface {
 
         this.infoCalls++;
         if (screenDataQueue.size() == artificialFrameDataDelay) {
-            logger.debug("Matching frameData {} with screenData {}", this.infoCalls, this.infoCalls - artificialFrameDataDelay);
+            logger.info("Matching frameData {} with screenData {}", this.infoCalls, this.infoCalls - artificialFrameDataDelay);
             datapointHandler.addDataPoint(frameData, screenDataQueue.pollFirst());
         }
     }
