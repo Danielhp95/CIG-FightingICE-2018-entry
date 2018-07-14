@@ -15,6 +15,7 @@ public class DatasetCreator implements AIInterface {
 
     final Logger logger = LoggerFactory.getLogger(DatasetCreator.class);
 
+
     // AI for which the datasetCreator delegates the gameplaying aspect to.
     private AIInterface playingAI;
 
@@ -47,7 +48,6 @@ public class DatasetCreator implements AIInterface {
 
         this.infoCalls++;
         if (screenDataQueue.size() == artificialFrameDataDelay) {
-            logger.info("Matching frameData {} with screenData {}", this.infoCalls, this.infoCalls - artificialFrameDataDelay);
             datapointHandler.addDataPoint(frameData, screenDataQueue.pollFirst());
         }
     }
@@ -74,7 +74,6 @@ public class DatasetCreator implements AIInterface {
             return;
         }
         screenDataQueue.addLast(sd);
-        logger.info("Size of queue: {}", screenDataQueue.size());
         this.playingAI.getScreenData(sd);
     }
 }

@@ -121,6 +121,7 @@ public class RoundDataPointHandler {
         String pixelInfo     = getPixelInformationFromScreenData(screenData);
         String frameDataInfo = getFrameDataInformation(frameData);
         String dataPoint = String.join(", ", frameDataInfo, pixelInfo);
+
         try {
             this.outputLogFile.append(dataPoint);
             this.outputLogFile.append("\n");
