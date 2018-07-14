@@ -29,7 +29,7 @@ elif [ "$MODE" = "V4.3" ]; then
 elif [ "$MODE" = "V4.3_WINDOWED" ]; then
     FLAGS="--grey-bg --inverted-player 1 --json --mute --py4j --port $PORT" 
 elif [ "$MODE" = "DATASETCREATOR" ]; then
-    FLAGS="-n 1 --a1 DatasetCreator --a2 MctsAi --c1 ZEN --c2 ZEN --grey-bg --inverted-player 1 --mute " 
+    FLAGS="-n 2 --a1 DatasetCreator --a2 MctsAi --c1 ZEN --c2 ZEN --grey-bg --inverted-player 1 --mute " 
 else
     echo "MODE: \"$MODE\" is not a valid mode"
     echo "Usage: ./start.sh MODE PORT_NUMBER (default 4242)"
