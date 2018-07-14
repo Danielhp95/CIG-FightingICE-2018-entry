@@ -1,9 +1,0 @@
-<component name="libraryTable">
-  <library name="FightingICE">
-    <CLASSES>
-      <root url="jar://$PROJECT_DIR$/FightingICE.jar!/" />
-    </CLASSES>
-    <JAVADOC />
-    <SOURCES />
-  </library>
-</component>
