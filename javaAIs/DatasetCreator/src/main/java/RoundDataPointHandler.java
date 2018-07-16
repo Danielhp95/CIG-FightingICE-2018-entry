@@ -138,13 +138,12 @@ public class RoundDataPointHandler {
 
     }
 
-    // TODO save point. Find way of turning byte[] into string
     private String getPixelInformationFromScreenData(ScreenData screenData){
         byte[] grayscaleDownSampledPixels =
                 screenData.getDisplayByteBufferAsBytes(96, 64, true);
         double[] normalizedPixelValues = normalizePixelValuesWithinRange(grayscaleDownSampledPixels,
-                -127, 127, 0, 1);
-        return normalizedPixelValues.toString();
+                -128, 127, 0, 1);
+        return Arrays.toString(normalizedPixelValues);
     }
 
     private double[] normalizePixelValuesWithinRange(byte[] values, float currentMin, float currentMax,
@@ -171,21 +170,26 @@ public class RoundDataPointHandler {
         return frameDataInfo;
     }
 
-    // TODO turn into one-hot encoding.
     private String getCharacterDataInformation(FrameData frameData, boolean isCharacter1) {
         CharacterData ch_data = frameData.getCharacter(isCharacter1);
-        Action a =  ch_data.getAction(); // TODO one hot
+        int[] a =  encodeAsOneHot(ch_data.getAction());
         float xCenter =  ch_data.getCenterX();
         float yCenter =  ch_data.getCenterY();
         float energy =  ch_data.getEnergy();
         float hp =  ch_data.getHp();
         float xSpeed =  ch_data.getSpeedX();
         float ySpeed =  ch_data.getSpeedY();
-        State s =  ch_data.getState();
+        int[] s =  encodeAsOneHot(ch_data.getState());
         boolean isFront =  ch_data.isFront();
-        return String.join(", ", Float.toString(xCenter),Float.toString(yCenter), a.toString(),
+        return String.join(", ", Float.toString(xCenter),Float.toString(yCenter), Arrays.toString(a),
                                          Float.toString(energy), Float.toString(hp), Float.toString(xSpeed),
-                                         Float.toString(ySpeed), s.toString(), (isFront) ? "1" : "0");
+                                         Float.toString(ySpeed), Arrays.toString(s), (isFront) ? "1" : "0");
+    }
+
+    private int[] encodeAsOneHot(Enum e1) {
+        int[] oneHotEncoding = new int[e1.getDeclaringClass().getEnumConstants().length];
+        oneHotEncoding[e1.ordinal()] = 1;
+        return oneHotEncoding;
     }
 
     public void roundEnd() {

@@ -106,7 +106,6 @@ public class YamlHandler {
         metadataFile.put("ContestantAIs", contestantAIs);
         return metadataFile;
     }
-
     private Map findContestantStatisticsFromContestantList(List<Map> contestantList, String targetContestantName) {
        for (Map contestant : contestantList)  {
           if (contestant.keySet().contains(targetContestantName)) {
