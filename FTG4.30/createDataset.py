@@ -18,7 +18,14 @@ def createDataset():
                 for character2 in availableCharacters:
                     for _ in tqdm(range(numberOfMatchesPerConfiguration)):
                         prepareTemporaryFile(contestant, character1, character2, position)
+                        createDirectoryForRoundImages(contestant, character1, character2)
                         playMatch(contestant, character1, character2, position, numberOfGames=numberOfMatchesPerConfiguration)
+
+
+def createDirectoryForRoundImages(contestant, character1, character2):
+    pathName = 'dataset/{}_{}_{}'.format(contestant, character1, character2)
+    if not os.path.isdir(pathName):
+        os.mkdir(pathName)
 
 
 def prepareTemporaryFile(contestant, character1, character2, playerPosition):
