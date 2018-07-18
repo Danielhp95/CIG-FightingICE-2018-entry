@@ -1,36 +1,46 @@
 from tqdm import tqdm
 from subprocess import Popen
 import os
+import sys
+import logging
+
+logging.basicConfig()
+logger = logging.getLogger("createDataset")
+logger.setLevel(logging.INFO)
 
 
-def createDataset():
+def createDataset(datasetPath):
     numberOfMatchesPerConfiguration = 10
     contestantAIs = ["MctsAi", "JerryMizunoAI", "LoadTorchWeightAI", "RandomAI"]
     availableCharacters = ["ZEN", "GARNET", "LUD"]
     positions = ["player 1", "player 2"]
 
-    if not os.path.isdir('dataset'):
-        os.mkdir('dataset')
+    datasetPath += 'dataset/'
+    if not os.path.isdir(datasetPath):
+        os.mkdir(datasetPath)
+    createTemporaryFileWithDatasetLocation(datasetPath)
 
-    for contestant in contestantAIs:
-        for position in positions:
-            for character1 in availableCharacters:
-                for character2 in availableCharacters:
-                    for _ in tqdm(range(numberOfMatchesPerConfiguration)):
-                        prepareTemporaryFile(contestant, character1, character2, position)
-                        createDirectoryForRoundImages(contestant, character1, character2)
-                        playMatch(contestant, character1, character2, position, numberOfGames=numberOfMatchesPerConfiguration)
+    try:
+        for contestant in tqdm(contestantAIs):
+            for position in positions:
+                for character1 in availableCharacters:
+                    for character2 in availableCharacters:
+                        for _ in tqdm(range(numberOfMatchesPerConfiguration)):
+                            prepareTemporaryFile(datasetPath, contestant, character1, character2, position)
+                            playMatch(contestant, character1, character2, position, numberOfGames=numberOfMatchesPerConfiguration)
+    except KeyboardInterrupt:
+        os.remove('.datasetPath.yaml')
+        logger.info("DATASET CREATION STOPPED BY USER")
 
 
-def createDirectoryForRoundImages(contestant, character1, character2):
-    pathName = 'dataset/{}_{}_{}'.format(contestant, character1, character2)
-    if not os.path.isdir(pathName):
-        os.mkdir(pathName)
+def createTemporaryFileWithDatasetLocation(datasetPath):
+    with open('.datasetPath.yaml', 'w') as f:
+        f.write('datasetPath: ' + datasetPath)
 
 
-def prepareTemporaryFile(contestant, character1, character2, playerPosition):
+def prepareTemporaryFile(datasetPath, contestant, character1, character2, playerPosition):
     content = 'contestantAI: {}\ncharacter1: {}\ncharacter2: {}\n'.format(contestant, character1, character2)
-    with open("dataset/.temp_match_info.yaml", "w+") as f:
+    with open(datasetPath + ".temp_match_info.yaml", "w+") as f:
         f.write(content)
         f.truncate()
 
@@ -50,4 +60,10 @@ def playMatch(contestant, character1, character2, position, numberOfGames):
 
 
 if __name__ == '__main__':
-    createDataset()
+    if len(sys.argv) != 2:
+        print('\n')
+        logger.error("The script takes exactly 1 argument, which represents the path where the dataset will be created")
+        print('\n')
+    else:
+        datasetPath = str(sys.argv[1])
+        createDataset(datasetPath)

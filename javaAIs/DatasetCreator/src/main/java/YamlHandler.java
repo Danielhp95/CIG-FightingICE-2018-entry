@@ -54,7 +54,7 @@ public class YamlHandler {
         return metadataFile;
     }
 
-    public Map openYamlFile(String filePath) {
+    public static Map openYamlFile(String filePath) {
         Yaml yaml = new Yaml();
         Map yamlFile = null;
         try {

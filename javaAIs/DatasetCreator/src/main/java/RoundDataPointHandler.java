@@ -1,3 +1,5 @@
+import java.awt.image.BufferedImage;
+import java.awt.image.WritableRaster;
 import java.io.*;
 
 import enumerate.Action;
@@ -16,6 +18,8 @@ import java.util.stream.IntStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.imageio.ImageIO;
+
 public class RoundDataPointHandler {
 
     final Logger logger = LoggerFactory.getLogger(RoundDataPointHandler.class);
@@ -32,14 +36,19 @@ public class RoundDataPointHandler {
     private String character1;
     private String character2;
 
-    private int roundProcessedFrames;
+    private String roundDatasetName;
+
     private boolean isFirstRoundDatapoint;
+    private int roundProcessedFrames;
+
+    private int downSampledImageWidth = 96;
+    private int downSampledImageHeight = 64;
 
     public RoundDataPointHandler() {
+
+
+        this.datasetPath = (String) YamlHandler.openYamlFile(".datasetPath.yaml").get("datasetPath");
         this.yamlHandler = new YamlHandler(datasetPath);
-
-        resetRoundStatistics();
-
         this.metadataFile = yamlHandler.findDatasetMetadata();
         parseTempFile(datasetPath + ".temp_match_info.yaml");
 
@@ -48,6 +57,7 @@ public class RoundDataPointHandler {
             metadataFile = yamlHandler.addContestantToMetadata(metadataFile, this.contestantAI);
         }
 
+        resetRoundStatistics();
         logger.info("Started new RoundDataPointHandler with RoundNumber {}: ContestantAI: {} Char 1: {} Char 2: {}",
                     roundNumber, contestantAI, character1, character2);
     }
@@ -57,7 +67,7 @@ public class RoundDataPointHandler {
     }
 
     private void parseTempFile(String filePath) {
-        Map tempInfoFile = yamlHandler.openYamlFile(datasetPath + ".temp_match_info.yaml");
+        Map tempInfoFile = YamlHandler.openYamlFile(datasetPath + ".temp_match_info.yaml");
         this.contestantAI = (String) tempInfoFile.get("contestantAI");
         this.character1 = (String) tempInfoFile.get("character1");
         this.character2 = (String) tempInfoFile.get("character2");
@@ -74,9 +84,9 @@ public class RoundDataPointHandler {
     }
 
     private FileWriter createEmptyRoundDataset(Map metaDataFile) throws IOException {
-        String newRoundDatasetName = getNextRoundDatasetFileName(metaDataFile, contestantAI, character1, character2);
-        logger.info("Creating new RoundDataset with name {}", newRoundDatasetName);
-        FileWriter f = new FileWriter(newRoundDatasetName);
+        this.roundDatasetName = getNextRoundDatasetFileName(metaDataFile, contestantAI, character1, character2);
+        logger.info("Creating new RoundDataset with name {}", roundDatasetName);
+        FileWriter f = new FileWriter(roundDatasetName);
         createDatasetHeaders(f);
         return f;
     }
@@ -113,22 +123,49 @@ public class RoundDataPointHandler {
         checkFrameDataAndScreenDataAreSafe(frameData, screenData);
 
         if (isFirstRoundDatapoint) {
-            isFirstRoundDatapoint = false;
-            logger.info("First frame where info can be added in Round {}", this.roundNumber);
-            this.outputLogFile = startNewRoundDataset(this.metadataFile);
+            initiateDataPointData();
         }
 
-        String pixelInfo     = getPixelInformationFromScreenData(screenData);
+        int[] pixelInfo      = getPixelInformationFromScreenData(screenData);
         String frameDataInfo = getFrameDataInformation(frameData);
-        String dataPoint = String.join(", ", frameDataInfo, pixelInfo);
 
+        saveFrameDataInfo(frameDataInfo, this.outputLogFile);
+        savePixelInfo(pixelInfo);
+        this.roundProcessedFrames++;
+    }
+
+    // TODO i really should not have an initiate function in add point.
+    private void initiateDataPointData() {
+        this.isFirstRoundDatapoint = false;
+        logger.info("First frame where info can be added in Round {}", this.roundNumber);
+        this.outputLogFile = startNewRoundDataset(this.metadataFile);
+        String imageDirectoryPath = String.format("%s/%d_%s_%s_%s", this.datasetPath, this.roundNumber, this.contestantAI,
+                                                                    this.character1, this.character2);
+        new File(imageDirectoryPath).mkdir();
+    }
+
+    private void saveFrameDataInfo(String framedataInfo, FileWriter outputFile) {
         try {
-            this.outputLogFile.append(dataPoint);
-            this.outputLogFile.append("\n");
+            outputFile.append(framedataInfo);
+            outputFile.append("\n");
         } catch (IOException e) {
             e.printStackTrace();
         }
-        this.roundProcessedFrames++;
+    }
+
+    private void savePixelInfo(int[] pixelInfo) {
+        String filename = String.format("%s/%d_%s_%s_%s/%d.jpeg", this.datasetPath, this.roundNumber, this.contestantAI,
+                                                                  this.character1, this.character2, this.roundProcessedFrames);
+        File imageFile = new File(filename);
+
+        BufferedImage outputImage = new BufferedImage(this.downSampledImageWidth, this.downSampledImageHeight, BufferedImage.TYPE_BYTE_GRAY);
+        WritableRaster raster = outputImage.getRaster();
+        raster.setSamples(0, 0, this.downSampledImageWidth, this.downSampledImageHeight, 0, pixelInfo);
+        try {
+            ImageIO.write(outputImage, "jpeg", imageFile);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private void checkFrameDataAndScreenDataAreSafe(FrameData frameData, ScreenData screenData) {
@@ -138,20 +175,25 @@ public class RoundDataPointHandler {
 
     }
 
-    private String getPixelInformationFromScreenData(ScreenData screenData){
+    private int[] getPixelInformationFromScreenData(ScreenData screenData){
         byte[] grayscaleDownSampledPixels =
-                screenData.getDisplayByteBufferAsBytes(96, 64, true);
-        double[] normalizedPixelValues = normalizePixelValuesWithinRange(grayscaleDownSampledPixels,
-                -128, 127, 0, 1);
-        return Arrays.toString(normalizedPixelValues);
+                screenData.getDisplayByteBufferAsBytes(this.downSampledImageWidth, this.downSampledImageHeight, true);
+        int[] normalizedPixelValues = normalizePixelValuesWithinRange(grayscaleDownSampledPixels,
+                -128, 127, 0, 255);
+        return normalizedPixelValues;
     }
 
-    private double[] normalizePixelValuesWithinRange(byte[] values, float currentMin, float currentMax,
-                                                                       float minValue, float maxValue) {
-        ByteBuffer buffer = ByteBuffer.wrap(values);
-        double[] normalizedValues = IntStream.generate(buffer::get).limit(buffer.remaining())
-                .mapToDouble(x -> (x - currentMin) / (currentMax - currentMin))
-                .toArray();
+    private int[] normalizePixelValuesWithinRange(byte[] values, int currentMin, int currentMax,
+                                                                       int minValue, int maxValue) {
+        //ByteBuffer buffer = ByteBuffer.wrap(values);
+        int[] normalizedValues = new int[values.length];
+        for (int i = 0; i < normalizedValues.length; i++) {
+            normalizedValues[i] = 127 + values[i];
+        }
+
+        //int[] normalizedValues = IntStream.generate(buffer::get).limit(buffer.remaining())
+        //        .map(x -> (x - currentMin) / (currentMax - currentMin))
+        //        .toArray();
         return normalizedValues;
     }
 
