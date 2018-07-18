@@ -25,9 +25,8 @@ def createDataset(datasetPath):
             for position in positions:
                 for character1 in availableCharacters:
                     for character2 in availableCharacters:
-                        for _ in tqdm(range(numberOfMatchesPerConfiguration)):
-                            prepareTemporaryFile(datasetPath, contestant, character1, character2, position)
-                            playMatch(contestant, character1, character2, position, numberOfGames=numberOfMatchesPerConfiguration)
+                        prepareTemporaryFile(datasetPath, contestant, character1, character2, position)
+                        playMatch(contestant, character1, character2, position, numberOfGames=numberOfMatchesPerConfiguration)
     except KeyboardInterrupt:
         os.remove('.datasetPath.yaml')
         logger.info("DATASET CREATION STOPPED BY USER")
