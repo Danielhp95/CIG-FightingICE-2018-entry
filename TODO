@@ -13,14 +13,25 @@ Create a proper git repo DONE
 
 LOW LEVEL:
     1. Make one-hot encoding for ACTION and STATE frameData information
-        1.1 - Normalize everything?
     2. Add Pixel input
     3. Offset frameData info from pixel input
-        3.1 Use a buffer inside DataCreator?
+        3.1 Use a buffer inside DataCreator? NEEDS TESTING (DONE)
+    // NEW!
+    4. Learn to create nested yaml objects in SnakeYaml DONE
+        To add contestantAI metadata DONE
+    5. Make sure that new roundDataset does not get called more often than necessary (Use a flag to on get information) (Almost DONE?)
+   
 
 HIGH LEVEL:
-    4. Make DataCreator create per round file
-    5. Create metadata (.meta) file (programatically, pls) and add / update where appropiate (initialize and roundEnd)
-    6. Enforce {num}_{contestantAI}_{char1}_{char2}.csv dataset file format.
-        6.1 Find way of reading {num}...{char2} info. At best, use java, at worst, read from .tmp file (use better name than .tmp)
-    7. Create python script to play different combinations of: contestantAI -> {p1, p2} -> character {ZEN, GARNET}
+    4. Make DataCreator create per round file DONE
+    5. Create metadata (.meta) file (programatically, pls) and add / update where appropiate (initialize and roundEnd) DONE
+    6. Enforce {num}_{contestantAI}_{char1}_{char2}.csv dataset file format. DONE
+        6.1 Find way of reading {num}...{char2} info. At best, use java, at worst, read from .tmp file (use better name than .tmp) (worse came to worst!) DONE
+    // NEW! 
+    7. Create Java class to play different combinations of: contestantAI -> {p1, p2} -> character {ZEN, GARNET}
+        1.2 Use this by creating a temp file, and by calling the java JVM with certain parameter values
+
+Neural Network practises:
+    1 - Normalize input and output. 
+    2 - Batch normalization for mini-batches. Make variance 1 and mean 0 for min batch statistics.
+    3 - Remember to use tf.gather (slicing part of the output layer to calculate different losses)

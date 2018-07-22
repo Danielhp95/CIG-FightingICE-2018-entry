@@ -8,7 +8,7 @@ For the countdown track the opponent AI always uses a vanilla(?) MCTS agent. Due
 
 ## The reward function
 
-Based on these papers (Microsoft fist of the lotus, and Rosas).
+Based on these papers (Microsoft fist of the lotus, and Rosas (Simon's paper)).
 
 The reward function reflects the frame by frame health change difference. R(s,a,s') = healthChange(p1, s, s') - healthChange(p2, s, s').
 Winning yields a high positive reward, dying yields a high negative reward.
@@ -24,10 +24,10 @@ The agent uses Proximal Policy Optimization (Schulman 2017) to train. The algori
 3. update old policy 
 
 ### State space
-
+Approximated game state.
 
 ### Action space
 The action space defines all the possible (combat) moves that the agent can take at a specific frame.
 
 #### Action space tricks
-
+Actions that are not allowed are not taken into account for a given frame. Only the valid actions are taken into account. The actions probabilities are normalized, and then a new action resampled
